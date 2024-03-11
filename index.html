@@ -4,26 +4,27 @@
  </head>
 <body>
 
-<label id="description"></label>
+<div id="description1"></div>
+<input type="text" size="40" id="sharedURL" value="" />
+<input type="button" value="Login(first time only)" onclick="onClickLogin();" id="ButtonLogin" />
+<br><br>
+
+<div id="description2"></div>
 <input type="text" size="40" id="miteneSource" value="" />
-
-<input type="button" value="load" onclick="onClickLoadButton();" id="ButtonLoad" />
-
-<BR>
+<input type="button" value="Load" onclick="onClickLoadButton();" id="ButtonLoad" />
+<ul>
+<li>Movie <input type="checkbox" value="Movie" onchange="onChangeMovie(this);" id="CheckboxMovie" checked />
+<li>Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="CheckboxPhoto" checked />
+</ul>
 <input type="button" value="Download All Photo" onclick="onClickDownloadAll();" id="ButtonDownloadAll" />
-<input type="button" value="Copy To Clipboard" onclick="onClickCopyToClipboard();" id="ButtonCopyToClipBoard" />
 
 <label id="messageArea" ></label>
 
-<input type="text" size="40" id="sharedURL" value="" />
-<input type="button" value="Login(first time only)" onclick="onClickLogin();" id="ButtonLogin" />
-
 <BR>
-Movie <input type="checkbox" value="Movie" onchange="onChangeMovie(this);" id="CheckboxMovie" checked />
-Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="CheckboxPhoto" checked />
-
 <BR>
+<ol>
 <label id="linkToFiles" ></label>
+</ol>
 
 
 <P>
@@ -33,8 +34,6 @@ Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="C
 
 
 <script>
-
-
     let gl_allFiles = [];
 
     function getBrowserLanguage() {
@@ -65,7 +64,6 @@ Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="C
        document.getElementById('miteneSource').disabled = !enable;
        document.getElementById('ButtonLoad').disabled = !enable;
        document.getElementById('ButtonDownloadAll').disabled = !enable;
-       document.getElementById('ButtonCopyToClipBoard').disabled = !enable;
     }
 
     function onChangeMovie(value) {
@@ -112,7 +110,8 @@ Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="C
 
     function onClickLogin() {
         let url = document.getElementById('sharedURL').value;
-        window.location.href = url;
+		//window.location.href = url;
+		window.open(url);
     }
 
     // textをクリップボードにコピーする
@@ -133,17 +132,7 @@ Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="C
 
       // コピー
       document.execCommand("copy");
-
-
     };
-
-    // ファイル一覧をクリップボードにコピーする
-    function onClickCopyToClipboard() {
-       let linkToFiles = document.getElementById('linkToFiles');
-       let textWithoutCopy = linkToFiles.innerText.replace(/copyToClipboard/g, '');  // 注意：これだと、ファイル名に含まれる copyToClipboard も消されてしまうのでなんとかしたい
-       copyToClipboard(textWithoutCopy);
-    }
-
 
     function fixFilename(string) {
        // stringのうち、日付に相当する部分は YYYY-MM-DDTHH:mm:SS+09:00 の形式になっている
@@ -159,40 +148,40 @@ Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="C
        copyToClipboard(fileName);
     };
 
-    function makeLink(url, fileName, username){
+	function makeLink(mediaNo, url, fileName, username){
 
       let linkToFiles = document.getElementById('linkToFiles');
 
+		//番号付きリスト
+		let li = document.createElement("li");
+		li.value = mediaNo;
+
+		//クリップボード
       let button = document.createElement('button');
       button.type = 'button';
-      let buttonText = document.createTextNode('copyToClipboard');
+		let buttonText = document.createTextNode('ファイル名コピー');
       button.appendChild(buttonText);
       button.addEventListener("click", {name: fileName, handleEvent: copyFileNameToClipboard});
-      linkToFiles.appendChild( button );
+		li.appendChild( button );
 
-
+		//画像のリンク追加
       let a = document.createElement("A");
       a.href = url;
       a.download = fileName;
       a.innerText = fileName;
-      linkToFiles.appendChild( a );
+		li.appendChild( a );
 
+		//ファイルアップユーザID
       let user = document.createElement("A");
       user.innerText = " " + username;
-      linkToFiles.appendChild( user );
+		li.appendChild( user );
 
-      let p = document.createElement("BR");
-      linkToFiles.appendChild( p );
+		linkToFiles.appendChild( li );
 
     }
 
     function enableDownloadAllButton(enable) {
       let button = document.getElementById('ButtonDownloadAll');
-      button.disabled = !enable;
-    }
-
-    function enableCopyToClipBoardButton(enable) {
-      let button = document.getElementById('ButtonCopyToClipBoard');
       button.disabled = !enable;
     }
 
@@ -209,7 +198,6 @@ Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="C
     // 有効なリンクがあるときに押せるボタンの有効・無効を切り替える
     function enableButtonWithValidLink(enable) {
          enableDownloadAllButton(enable);
-         enableCopyToClipBoardButton(enable);
          enableMediaTypeCheckbox(enable);
     }
 
@@ -252,7 +240,7 @@ Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="C
 
     function getPostTitle(sameTookAtNo) {
         if (sameTookAtNo <= 0) {
-           return "";
+			return 0;
         }
 
         let nextSameTookAtNo = sameTookAtNo + 1;
@@ -278,6 +266,7 @@ Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="C
 
          // これで、 gon 以下に、みてねのデータが追加される
 
+		const regexWebp = new RegExp('\.webp');
 
          // 追加されたデータを読み込む 
          const mediaFiles = gon.media["mediaFiles"];
@@ -288,14 +277,7 @@ Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="C
             const uuid = thisMediaFile["uuid"];
             const tookAt = thisMediaFile["tookAt"];
             const sameTookAtNo = getSameTookAtNum(tookAt, mediaFiles, mediaFileNo); // mediaFilesの 0 - mediaFilesNo までの間に同じ tookAt がいくつあるかを返す。同じのがほかになければ 0
-            const hasComment = thisMediaFile["hasComment"];
             let title = "";
-
-            if (hasComment) {
-               const comments = thisMediaFile["comments"];
-               const firstComment = comments[0];
-               title = firstComment["body"];
-            }
 
             const mediaType = thisMediaFile["mediaType"];
             const urlPhoto = thisMediaFile["expiringUrl"];
@@ -309,8 +291,12 @@ Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="C
                }
 
                url = urlPhoto;
+				if (regexWebp.test(url)) {
+					extention = ".webp"
+				} else {
                extention = ".jpg"
             }
+			}
             else if (mediaType === "movie") {
                if (!showMovie) {
                   continue;
@@ -337,7 +323,7 @@ Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="C
              file["mediaType"] = mediaType;
              gl_allFiles.push(file);
 
-            makeLink(url, fileNameFixed, username);
+			makeLink(mediaFileNo + 1, url, fileNameFixed, username);
 
          }
 
@@ -372,22 +358,10 @@ Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="C
     });
 
     window.onload = function() {
-
-
         enableButtonWithValidLink(false);
-
         {
-           let message = "";
-
-           const displayLanguage = getDisplayLanguage();
-           if (displayLanguage == "ja") {
-              message = "みてねのソースの 3 行目（window.gonで始まる行）を以下にペーストして<BR>load ボタンを押してください<BR>"
-           }
-           else {
-              message = "Paste the third line of the Mitene source code, the line starting with window.gon.<BR>And press load button<BR>";
-           }
-
-           document.getElementById("description").innerHTML = message;
+			document.getElementById("description1").innerHTML = "みてねブラウザ版のURLを以下にペーストしてログインしてください。<br>※初回のみ、またはセッションが有効でないとき";
+			document.getElementById("description2").innerHTML = "みてねブラウザ版のソース3行目（window.gonで始まる行）を以下にペーストして<br>Load ボタンを押してください。";
         }
     }
 
@@ -399,4 +373,3 @@ Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="C
 </body>
 
 </html>
-

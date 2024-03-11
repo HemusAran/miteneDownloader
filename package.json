@@ -1,7 +1,8 @@
 {
   "name": "miteneDownloader",
-  "author": "miworky",
-  "version": "1.2.0",
+  "author": "HemusAran",  
+  "originalAuthor": "miworky",
+  "version": "1.3.0",
   "main": "index.js",
   "license": "MIT",
   "description": "Download mitene files",
@@ -13,7 +14,7 @@
     "https": "^1.0.0"
   },
   "build": {
-     "appId": "com.miworky.miteneDownloader",
+     "appId": "com.HemusAran.miteneDownloader",
      "productName": "miteneDownloader",
      "files": [
         "*.js",

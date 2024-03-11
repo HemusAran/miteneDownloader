@@ -54,7 +54,12 @@ app.on('window-all-closed', function () {
 
 
 // uriのファイルを filename としてダウンロードする
-const download = (event, uri, filename, downloadProgress, fileNum) => {
+const download = async (event, uri, filename, downloadProgress, fileNum, fileNo) => {
+
+	// 少しだけタイミングをずらす
+	const my_sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+	await my_sleep(fileNo * 100);
+
   return new Promise((resolve, reject) =>
     https
       .request(uri, (res) => {
@@ -102,16 +107,16 @@ ipcMain.on('downloadAll', function( event, data){
        const url = data[fileNo]["url"];
        const filename = data[fileNo]["filename"];
 
-//       console.log( filename );
-//       console.log( url );
-
        const downloadTo = downloadPath + "/" + filename;
+		if (fs.existsSync(downloadTo)) {
+			//ファイルが存在する場合はスキップ
+		} else {
        const thisDownload = download(
-           event, url, downloadTo, downloadProgress, fileNum
+				event, url, downloadTo, downloadProgress, fileNum, fileNo
        );
-
        downloads.push(thisDownload);
     }
+	}
 
     // ダウンロード開始をレンダラープロセスに通知
     event.reply('startDownloading', fileNum.toString() + " files will be downloaded.");
@@ -123,11 +128,4 @@ ipcMain.on('downloadAll', function( event, data){
     });
 
 })
-
-
-
-
-
-
-
 
