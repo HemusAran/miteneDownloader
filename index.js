@@ -2,11 +2,14 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const path = require('path')
 const fs = require('fs')
-const https = require('https')
+//const https = require('https')
+const { download } = require('electron-dl');
+
+let mainWindow;
 
 function createWindow () {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -17,7 +20,7 @@ function createWindow () {
   mainWindow.setMenuBarVisibility(false);
 
   const package_name = "Mitene Downloader";
-  const package_version = "1.2.0";
+  const package_version = "1.4.0";
   const title = package_name + " " + package_version;
   mainWindow.setTitle(title);
 
@@ -53,79 +56,39 @@ app.on('window-all-closed', function () {
 
 
 
-// uriのファイルを filename としてダウンロードする
-const download = async (event, uri, filename, downloadProgress, fileNum, fileNo) => {
 
-	// 少しだけタイミングをずらす
-	const my_sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-	await my_sleep(fileNo * 100);
+ipcMain.on('downloadAll', async (event, data) => {
 
-  return new Promise((resolve, reject) =>
-    https
-      .request(uri, (res) => {
-        res
-          .pipe(fs.createWriteStream(filename))
-          .on("close", () => {
-             // 1つダウンロード完了した
+	// ダウンロード先のフォルダを選択するダイアログを表示
+	const dirpath = dialog.showOpenDialogSync(null, {
+		properties: ['openDirectory'],
+		title: 'download to',
+		defaultPath: '.'
+	});
 
-             // ダウンロード完了したファイルの個数をカウントアップ
-             downloadProgress.finished = downloadProgress.finished + 1;
-
-             // レンダラープロセスにその旨通知
-             event.reply('downloadProgress', "downloading " + downloadProgress.finished.toString() + "/" + fileNum.toString());
-
-             resolve();
-           })
-          .on("error", reject);
-      })
-      .end()
-  );
-};
-
-
-
-ipcMain.on('downloadAll', function( event, data){
-
-    // ダウンロード先のフォルダを選択するダイアログを表示する 
-    const downloadPath = dialog.showOpenDialogSync(null, {
-            properties: ['openDirectory'],
-            title: 'download to',
-            defaultPath: '.'
-    });
-
-    if (downloadPath === undefined) {
-       // キャンセルされた
-       return;
-    }
-
-    let downloadProgress = { finished: 0 };
-    let downloads = [];  // ダウンロードするファイルの個数分の Promise を格納する配列
-
-    // ファイル数分ダウンロードする Promise を生成する（まだダウンロードはしない）
-    const fileNum = data.length;
-    for (let fileNo = 0;fileNo < fileNum;fileNo++) {
-       const url = data[fileNo]["url"];
-       const filename = data[fileNo]["filename"];
-
-       const downloadTo = downloadPath + "/" + filename;
-		if (fs.existsSync(downloadTo)) {
-			//ファイルが存在する場合はスキップ
-		} else {
-       const thisDownload = download(
-				event, url, downloadTo, downloadProgress, fileNum, fileNo
-       );
-       downloads.push(thisDownload);
-    }
+	if (dirpath === undefined) {
+		// キャンセルされた
+		return;
 	}
 
-    // ダウンロード開始をレンダラープロセスに通知
-    event.reply('startDownloading', fileNum.toString() + " files will be downloaded.");
+	event.reply('startDownloading', "ダウンロード開始");
 
-    // まとめてダウンロード開始
-    Promise.all(downloads).then(() => { 
-        // すべてのダウンロードが完了したら、その旨をレンダラープロセスに通知
-        event.reply('finishDownloading', fileNum.toString() + " files were downloaded.");
-    });
+	// ファイル数分ダウンロード
+	for (let no=0; no<data.length; no++) {
+		const url = data[no]["url"];
+		const filename = data[no]["filename"];
 
-})
+		if (fs.existsSync(dirpath + "/" + filename)) {
+			//ファイルが存在する場合はスキップ
+		} else {
+			await download(mainWindow, url, {
+				directory: dirpath + "/",
+				filename: filename,
+			});
+		}
+		
+		event.reply('downloadProgress', "ダウンロード中 " + no.toString() + "/" + data.length.toString());
+	}
 
+	event.reply('finishDownloading', "ダウンロード終了");
+});

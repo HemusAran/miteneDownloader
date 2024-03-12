@@ -16,7 +16,7 @@
 <li>Movie <input type="checkbox" value="Movie" onchange="onChangeMovie(this);" id="CheckboxMovie" checked />
 <li>Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="CheckboxPhoto" checked />
 </ul>
-<input type="button" value="Download All Photo" onclick="onClickDownloadAll();" id="ButtonDownloadAll" />
+<input type="button" value="Download All" onclick="onClickDownloadAll();" id="ButtonDownloadAll" />
 
 <label id="messageArea" ></label>
 
@@ -96,13 +96,10 @@
     }
 
     function onClickDownloadAll(){
-        // movie は現状は DL できないので Photo のみリストアップする
         let photoFiles = [];
 
         gl_allFiles.forEach(function(file) {
-           if (file["mediaType"] === "photo") {
-              photoFiles.push(file);
-           }
+            photoFiles.push(file);
         });
 
         window.api.send("downloadAll", photoFiles );

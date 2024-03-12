@@ -1,8 +1,8 @@
 {
   "name": "miteneDownloader",
-  "author": "HemusAran",  
+  "author": "HemusAran",
   "originalAuthor": "miworky",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "main": "index.js",
   "license": "MIT",
   "description": "Download mitene files",
@@ -10,20 +10,22 @@
     "electron": "^13.1.7",
     "electron-builder": "^22.11.7",
     "electron-packager": "^15.3.0",
-    "fs-extra": "^10.0.0",
-    "https": "^1.0.0"
+    "fs-extra": "^10.0.0"
   },
   "build": {
-     "appId": "com.HemusAran.miteneDownloader",
-     "productName": "miteneDownloader",
-     "files": [
-        "*.js",
-        "*.html"
-     ]
+    "appId": "com.HemusAran.miteneDownloader",
+    "productName": "miteneDownloader",
+    "files": [
+      "*.js",
+      "*.html"
+    ]
   },
   "scripts": {
-     "start": "electron .",
-     "build:win": "electron-builder --win --x64 --dir",
-     "build:mac": "electron-builder --mac --x64"
+    "start": "electron .",
+    "build:win": "electron-builder --win --x64 --dir",
+    "build:mac": "electron-builder --mac --x64"
+  },
+  "dependencies": {
+    "electron-dl": "^3.5.2"
   }
 }
