@@ -6,7 +6,9 @@
   - 写真の拡張子.webp対応（.webpのファイルを.jpegとしているとWindowsフォトがうまく動かないため）
 - v1.4.0
   - 動画もダウンロード可能に。並列ダウンロードは廃止。
-
+- v1.5.0
+  - １枚目のサムネイルを表示。ページが正しいか、セッションが生きているかの確認に使用。
+  - プログラムのインデント修正。
 
 # miteneDownloader
 Download jpg/webp/mp4 files from mitene

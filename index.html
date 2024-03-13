@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
- <head>
- </head>
+<head>
+</head>
 <body>
 
 <div id="description1"></div>
@@ -22,6 +22,7 @@
 
 <BR>
 <BR>
+<label id="imgArea" >■</label> ←Load時に1枚目のサムネイル表示
 <ol>
 <label id="linkToFiles" ></label>
 </ol>
@@ -34,333 +35,349 @@
 
 
 <script>
-    let gl_allFiles = [];
+	let gl_allFiles = [];
 
-    function getBrowserLanguage() {
-       const language = (window.navigator.languages && window.navigator.languages[0]) ||
-            window.navigator.language ||
-            window.navigator.userLanguage ||
-            window.navigator.browserLanguage;
+	function getBrowserLanguage() {
+		const language = (window.navigator.languages && window.navigator.languages[0]) ||
+			window.navigator.language ||
+			window.navigator.userLanguage ||
+			window.navigator.browserLanguage;
 
-       return language;
-    }
+		return language;
+	}
 
-    // 言語設定が日本語なら日本語、それ以外は英語として返す
-    function getDisplayLanguage() {
-        let displayLanguage = "";
-        const browserLanguage = getBrowserLanguage();       
-        if (browserLanguage == "ja") {
-            displayLanguage = browserLanguage;
-        }
-        else {
-            displayLanguage = "en_US";
-        }
+	// 言語設定が日本語なら日本語、それ以外は英語として返す
+	function getDisplayLanguage() {
+		let displayLanguage = "";
+		const browserLanguage = getBrowserLanguage();
+		if (browserLanguage == "ja") {
+			displayLanguage = browserLanguage;
+		} else {
+			displayLanguage = "en_US";
+		}
 
-        return displayLanguage;
-    }
+		return displayLanguage;
+	}
 
-    
-    function enableInputs(enable) {
-       document.getElementById('miteneSource').disabled = !enable;
-       document.getElementById('ButtonLoad').disabled = !enable;
-       document.getElementById('ButtonDownloadAll').disabled = !enable;
-    }
+	
+	function enableInputs(enable) {
+		document.getElementById('miteneSource').disabled = !enable;
+		document.getElementById('ButtonLoad').disabled = !enable;
+		document.getElementById('ButtonDownloadAll').disabled = !enable;
+	}
 
-    function onChangeMovie(value) {
-       onClickLoadButton();
-    }
+	function onChangeMovie(value) {
+		onClickLoadButton();
+	}
 
-    function onChangePhoto(value) {
-       onClickLoadButton();
-    }
+	function onChangePhoto(value) {
+		onClickLoadButton();
+	}
 
-    function isShowMovie() {
-       return document.getElementById('CheckboxMovie').checked;
-    }
+	function isShowMovie() {
+		return document.getElementById('CheckboxMovie').checked;
+	}
 
-    function isShowPhoto() {
-       return document.getElementById('CheckboxPhoto').checked;
-    }
+	function isShowPhoto() {
+		return document.getElementById('CheckboxPhoto').checked;
+	}
 
-    function startDownloading() {
-       enableInputs(false);
-    }
+	function startDownloading() {
+		enableInputs(false);
+	}
 
-    function finishDownloading() {
-       enableInputs(true);
-    }
+	function finishDownloading() {
+		enableInputs(true);
+	}
 
-    function onClickLoadButton(){
-      showMessage("");
-      evalMitene();
-    }
+	function onClickLoadButton(){
+		showMessage("");
+		evalMitene();
+	}
 
-    function onClickDownloadAll(){
-        let photoFiles = [];
+	function onClickDownloadAll(){
+		let photoFiles = [];
 
-        gl_allFiles.forEach(function(file) {
-            photoFiles.push(file);
-        });
+		gl_allFiles.forEach(function(file) {
+			photoFiles.push(file);
+		});
 
-        window.api.send("downloadAll", photoFiles );
-    }
+		window.api.send("downloadAll", photoFiles );
+	}
 
-    function onClickLogin() {
-        let url = document.getElementById('sharedURL').value;
+	function onClickLogin() {
+		let url = document.getElementById('sharedURL').value;
 		//window.location.href = url;
 		window.open(url);
-    }
+	}
 
-    // textをクリップボードにコピーする
-    function copyToClipboard(text) {
-       let listener = function(e){
+	// textをクリップボードにコピーする
+	function copyToClipboard(text) {
+		let listener = function(e){
 
-          e.clipboardData.setData("text/plain" , text);    
+			e.clipboardData.setData("text/plain" , text);
 
-          // 本来のイベントをキャンセル
-          e.preventDefault();
+			// 本来のイベントをキャンセル
+			e.preventDefault();
 
-          // 終わったら削除
-          document.removeEventListener("copy", listener);
-       }
+			// 終わったら削除
+			document.removeEventListener("copy", listener);
+		}
 
-      // コピーのイベントが発生したときに、クリップボードに書き込むようにしておく
-      document.addEventListener("copy" , listener);
+		// コピーのイベントが発生したときに、クリップボードに書き込むようにしておく
+		document.addEventListener("copy" , listener);
 
-      // コピー
-      document.execCommand("copy");
-    };
+		// コピー
+		document.execCommand("copy");
+	};
 
-    function fixFilename(string) {
-       // stringのうち、日付に相当する部分は YYYY-MM-DDTHH:mm:SS+09:00 の形式になっている
-       // : と + はファイル名には使えないので削除する
-       const fixed1 = string.replace("+09:00", '');  // TODO これだとタイムゾーンが変わったときにうまくいかない
-       const fixed2 = fixed1.replace(/:/g, '');
+	function fixFilename(string) {
+		// stringのうち、日付に相当する部分は YYYY-MM-DDTHH:mm:SS+09:00 の形式になっている
+		// : と + はファイル名には使えないので削除する
+		const fixed1 = string.replace("+09:00", '');	// TODO これだとタイムゾーンが変わったときにうまくいかない
+		const fixed2 = fixed1.replace(/:/g, '');
 
-       return fixed2;
-    }
+		return fixed2;
+	}
 
-    function copyFileNameToClipboard(e) {
-       let fileName = this.name;
-       copyToClipboard(fileName);
-    };
-
+	function copyFileNameToClipboard(e) {
+		let fileName = this.name;
+		copyToClipboard(fileName);
+	};
+	
+	function makeImg (urlThumb) {
+		let imgArea = document.getElementById('imgArea');
+		let img = document.createElement("img");
+		img.src = urlThumb;
+		img.width = 150;
+		img.height = 150;
+		imgArea.appendChild(img);
+	}
+	
 	function makeLink(mediaNo, url, fileName, username){
 
-      let linkToFiles = document.getElementById('linkToFiles');
+		let linkToFiles = document.getElementById('linkToFiles');
 
 		//番号付きリスト
 		let li = document.createElement("li");
 		li.value = mediaNo;
 
 		//クリップボード
-      let button = document.createElement('button');
-      button.type = 'button';
+		let button = document.createElement('button');
+		button.type = 'button';
 		let buttonText = document.createTextNode('ファイル名コピー');
-      button.appendChild(buttonText);
-      button.addEventListener("click", {name: fileName, handleEvent: copyFileNameToClipboard});
+		button.appendChild(buttonText);
+		button.addEventListener("click", {name: fileName, handleEvent: copyFileNameToClipboard});
 		li.appendChild( button );
 
 		//画像のリンク追加
-      let a = document.createElement("A");
-      a.href = url;
-      a.download = fileName;
-      a.innerText = fileName;
+		let a = document.createElement("A");
+		a.href = url;
+		a.download = fileName;
+		a.innerText = fileName;
 		li.appendChild( a );
 
 		//ファイルアップユーザID
-      let user = document.createElement("A");
-      user.innerText = " " + username;
+		let user = document.createElement("A");
+		user.innerText = " " + username;
 		li.appendChild( user );
 
 		linkToFiles.appendChild( li );
 
-    }
+	}
 
-    function enableDownloadAllButton(enable) {
-      let button = document.getElementById('ButtonDownloadAll');
-      button.disabled = !enable;
-    }
+	function enableDownloadAllButton(enable) {
+		let button = document.getElementById('ButtonDownloadAll');
+		button.disabled = !enable;
+	}
 
-    function enableMediaTypeCheckbox(enable) {
-       // 両方 false のときに disable にすると二度と enable にできない
-       if (!isShowMovie() && !isShowPhoto()) {
-          return;
-       }
+	function enableMediaTypeCheckbox(enable) {
+		document.getElementById('CheckboxMovie').disabled = !enable;
+		document.getElementById('CheckboxPhoto').disabled = !enable;
+	}
 
-       document.getElementById('CheckboxMovie').disabled = !enable;
-       document.getElementById('CheckboxPhoto').disabled = !enable;
-    }
+	// 有効なリンクがあるときに押せるボタンの有効・無効を切り替える
+	function enableButtonWithValidLink(enable) {
+		enableDownloadAllButton(enable);
+	}
 
-    // 有効なリンクがあるときに押せるボタンの有効・無効を切り替える
-    function enableButtonWithValidLink(enable) {
-         enableDownloadAllButton(enable);
-         enableMediaTypeCheckbox(enable);
-    }
+	function deleteAllLinks() {
+		let linkToFiles = document.getElementById('linkToFiles');
+		while( linkToFiles.firstChild ){
+			linkToFiles.removeChild( linkToFiles.firstChild );
+		}
+	}
 
-    function deleteAllLinks() {
-         let linkToFiles = document.getElementById('linkToFiles');
+	function deleteContents() {
+		gon = {};
+		gl_allFiles = [];
+	}
 
-         // linkToFilesのすべての子要素を削除する
-         var clone = linkToFiles.cloneNode( false );
-         linkToFiles.parentNode.replaceChild( clone , linkToFiles );
-    }
+	function deleteImageArea() {
+		let imgArea = document.getElementById('imgArea');
+		while( imgArea.firstChild ){
+			imgArea.removeChild( imgArea.firstChild );
+		}
+	}
 
-    function deleteContents() {
-         gon = {};
-         gl_allFiles = [];
-    }
+	// 与えられた撮影時刻と同じ撮影時刻のファイルの個数を返す
+	// 　調査対象：mediaFiles の先頭から mediaFileNo で指定された位置のひとつ前まで
+	// 同じ撮影時刻のファイルがなければ 0
+	//
+	// mediaFilesは撮影時刻の新しい順に並んでいるが、番号は古いほうから 0, 1, 2 と付けたいので、
+	// mediaFilesの後ろ側から探す
+	function getSameTookAtNum(tookAt, mediaFiles, mediaFileNum) {
 
-    // 与えられた撮影時刻と同じ撮影時刻のファイルの個数を返す
-    // 　調査対象：mediaFiles の先頭から mediaFileNo で指定された位置のひとつ前まで
-    // 同じ撮影時刻のファイルがなければ 0
-    //
-    // mediaFilesは撮影時刻の新しい順に並んでいるが、番号は古いほうから 0, 1, 2 と付けたいので、
-    // mediaFilesの後ろ側から探す
-    function getSameTookAtNum(tookAt, mediaFiles, mediaFileNum) {
+		let sameTookAt = 0;
 
-         let sameTookAt = 0;
+		const mediaFilesNum = mediaFiles.length;
+		for (let mediaFileNo = 0;mediaFileNo < mediaFilesNum - mediaFileNum - 1;mediaFileNo++) {
+			const mediaFile = mediaFiles[mediaFilesNum - mediaFileNo - 1];	// 後ろ側からみる
 
-         const mediaFilesNum = mediaFiles.length;
-         for (let mediaFileNo = 0;mediaFileNo < mediaFilesNum - mediaFileNum - 1;mediaFileNo++) {
-            const mediaFile = mediaFiles[mediaFilesNum - mediaFileNo - 1];  // 後ろ側からみる
+			const thisTookAt = mediaFile["tookAt"];
 
-            const thisTookAt = mediaFile["tookAt"];
+			if (thisTookAt === tookAt) {
+				sameTookAt++;
+			}
+		}
 
-            if (thisTookAt === tookAt) {
-               sameTookAt++;
-            }
-         }
+		return sameTookAt;
+	}
 
-         return sameTookAt;
-    }    
-
-    function getPostTitle(sameTookAtNo) {
-        if (sameTookAtNo <= 0) {
+	function getPostTitle(sameTookAtNo) {
+		if (sameTookAtNo <= 0) {
 			return 0;
-        }
+		}
 
-        let nextSameTookAtNo = sameTookAtNo + 1;
+		let nextSameTookAtNo = sameTookAtNo + 1;
 
-        return "_" + nextSameTookAtNo.toString();
-    }
+		return "_" + nextSameTookAtNo.toString();
+	}
 
-    function evalMitene() {
-         // すでに追加されているリンクは削除する
-         deleteAllLinks();
+	function evalMitene() {
+		// すでに追加されているリンクは削除する
+		deleteAllLinks();
 
-         deleteContents();
+		deleteContents();
+		
+		deleteImageArea();
 
-         // 有効なリンクがあるときに押せるボタンを disable にする
-         enableButtonWithValidLink(false);
-         
-         const showMovie = isShowMovie();
-         const showPhoto = isShowPhoto();
+		// 有効なリンクがあるときに押せるボタンを disable にする
+		enableButtonWithValidLink(false);
+		
+		const showMovie = isShowMovie();
+		const showPhoto = isShowPhoto();
 
-         // みてねのソースの内容を評価する
-         let element = document.getElementById('miteneSource');
-         eval(element.value);
+		// みてねのソースの内容を評価する
+		let element = document.getElementById('miteneSource');
+		eval(element.value);
 
-         // これで、 gon 以下に、みてねのデータが追加される
+		// これで、 gon 以下に、みてねのデータが追加される
 
 		const regexWebp = new RegExp('\.webp');
 
-         // 追加されたデータを読み込む 
-         const mediaFiles = gon.media["mediaFiles"];
+		// 追加されたデータを読み込む 
+		const mediaFiles = gon.media["mediaFiles"];
 
-         const mediaFileNum = mediaFiles.length;
-         for (let mediaFileNo = 0;mediaFileNo < mediaFileNum;mediaFileNo++) {
-            const thisMediaFile = mediaFiles[mediaFileNo];
-            const uuid = thisMediaFile["uuid"];
-            const tookAt = thisMediaFile["tookAt"];
-            const sameTookAtNo = getSameTookAtNum(tookAt, mediaFiles, mediaFileNo); // mediaFilesの 0 - mediaFilesNo までの間に同じ tookAt がいくつあるかを返す。同じのがほかになければ 0
-            let title = "";
+		const mediaFileNum = mediaFiles.length;
+		for (let mediaFileNo = 0;mediaFileNo < mediaFileNum;mediaFileNo++) {
+			const thisMediaFile = mediaFiles[mediaFileNo];
+			const uuid = thisMediaFile["uuid"];
+			const tookAt = thisMediaFile["tookAt"];
+			const sameTookAtNo = getSameTookAtNum(tookAt, mediaFiles, mediaFileNo); // mediaFilesの 0 - mediaFilesNo までの間に同じ tookAt がいくつあるかを返す。同じのがほかになければ 0
+			let title = "";
 
-            const mediaType = thisMediaFile["mediaType"];
-            const urlPhoto = thisMediaFile["expiringUrl"];
-            const urlMovie = thisMediaFile["expiringVideoUrl"];
+			const mediaType = thisMediaFile["mediaType"];
+			const urlPhoto = thisMediaFile["expiringUrl"];
+			const urlMovie = thisMediaFile["expiringVideoUrl"];
+			const urlThumb = thisMediaFile["expiringThumbUrl"];
 
-            let url;
-            let extention;
-            if (mediaType === "photo") {
-               if (!showPhoto) {
-                  continue;
-               }
+			if (mediaFileNo == 0) {
+				//確認用に1枚目のサムネイルを表示
+				makeImg(urlThumb);
+			}
 
-               url = urlPhoto;
+			let url;
+			let extention;
+			if (mediaType === "photo") {
+				if (!showPhoto) {
+					continue;
+				}
+
+				url = urlPhoto;
 				if (regexWebp.test(url)) {
 					extention = ".webp"
 				} else {
-               extention = ".jpg"
-            }
+					extention = ".jpg"
+				}
 			}
-            else if (mediaType === "movie") {
-               if (!showMovie) {
-                  continue;
-               }
+			else if (mediaType === "movie") {
+				if (!showMovie) {
+					continue;
+				}
 
-               url = urlMovie.replace("media_files_playlist", 'media_files') + "/download";
-               extention = ".mp4"
-            }
+				url = urlMovie.replace("media_files_playlist", 'media_files') + "/download";
+				extention = ".mp4"
+			}
 
-            const postTitle = getPostTitle(sameTookAtNo);
-            const filename = tookAt + "_" + title + postTitle + extention;
+			const postTitle = getPostTitle(sameTookAtNo);
+			const filename = tookAt + "_" + title + postTitle + extention;
 
-            let username;
-            const userId = thisMediaFile["userId"];
-            username = userId;
+			let username;
+			const userId = thisMediaFile["userId"];
+			username = userId;
 
-//            document.getElementById("output").innerHTML += mediaType + " " + filename + "  " + url + "\n";
+//			document.getElementById("output").innerHTML += mediaType + " " + filename + "	" + url + "\n";
 
-             const fileNameFixed = fixFilename(filename);
+			const fileNameFixed = fixFilename(filename);
 
-             let file = {};
-             file["url"] = url;
-             file["filename"] = fileNameFixed;
-             file["mediaType"] = mediaType;
-             gl_allFiles.push(file);
+			let file = {};
+			file["url"] = url;
+			file["filename"] = fileNameFixed;
+			file["mediaType"] = mediaType;
+			gl_allFiles.push(file);
 
 			makeLink(mediaFileNo + 1, url, fileNameFixed, username);
 
-         }
+		}
 
-         // ファイルへのリンクが含まれていれば、有効なリンクがあるときに押せるボタン を有効にする      
-         let hasValidLink = false;
-         if (0 < gl_allFiles.length) {
-            hasValidLink = true;
-         }
+		// ファイルへのリンクが含まれていれば、有効なリンクがあるときに押せるボタン を有効にする
+		let hasValidLink = false;
+		if (0 < gl_allFiles.length) {
+			hasValidLink = true;
+		}
 
-         enableButtonWithValidLink(hasValidLink);
+		enableButtonWithValidLink(hasValidLink);
 
-    }
+	}
 
-    function showMessage(message) {
-      document.getElementById("messageArea").innerHTML = message;
-    }
+	function showMessage(message) {
+		document.getElementById("messageArea").innerHTML = message;
+	}
 
-    // ---------------------------------------------------
-    // Main process からの通知を受け取る関数
-    window.api.on('startDownloading', (event, argv)=>{
-      startDownloading();
-      showMessage(argv);
-    });
+	// ---------------------------------------------------
+	// Main process からの通知を受け取る関数
+	window.api.on('startDownloading', (event, argv)=>{
+		startDownloading();
+		showMessage(argv);
+	});
 
-    window.api.on('downloadProgress', (event, argv)=>{
-      showMessage(argv);
-    });
+	window.api.on('downloadProgress', (event, argv)=>{
+		showMessage(argv);
+	});
 
-    window.api.on('finishDownloading', (event, argv)=>{
-      showMessage(argv);
-      finishDownloading();
-    });
+	window.api.on('finishDownloading', (event, argv)=>{
+		showMessage(argv);
+		finishDownloading();
+	});
 
-    window.onload = function() {
-        enableButtonWithValidLink(false);
-        {
+	window.onload = function() {
+		enableButtonWithValidLink(false);
+		{
 			document.getElementById("description1").innerHTML = "みてねブラウザ版のURLを以下にペーストしてログインしてください。<br>※初回のみ、またはセッションが有効でないとき";
 			document.getElementById("description2").innerHTML = "みてねブラウザ版のソース3行目（window.gonで始まる行）を以下にペーストして<br>Load ボタンを押してください。";
-        }
-    }
+		}
+	}
 
 
 

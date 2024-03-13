@@ -2,7 +2,7 @@
   "name": "miteneDownloader",
   "author": "HemusAran",
   "originalAuthor": "miworky",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "main": "index.js",
   "license": "MIT",
   "description": "Download mitene files",
