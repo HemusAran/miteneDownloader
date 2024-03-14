@@ -2,7 +2,7 @@
   "name": "miteneDownloader",
   "author": "HemusAran",
   "originalAuthor": "miworky",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "main": "index.js",
   "license": "MIT",
   "description": "Download mitene files",
@@ -18,7 +18,8 @@
     "files": [
       "*.js",
       "*.html"
-    ]
+    ],
+    "extraFiles": "config_.ini"
   },
   "scripts": {
     "start": "electron .",
@@ -26,6 +27,7 @@
     "build:mac": "electron-builder --mac --x64"
   },
   "dependencies": {
-    "electron-dl": "^3.5.2"
+    "electron-dl": "^3.5.2",
+    "ini": "^4.1.2"
   }
 }

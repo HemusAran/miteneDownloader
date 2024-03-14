@@ -4,26 +4,40 @@
 </head>
 <body>
 
+<!-- ログイン or サブウィンドウ -->
 <div id="description1"></div>
 <input type="text" size="40" id="sharedURL" value="" />
-<input type="button" value="Login(first time only)" onclick="onClickLogin();" id="ButtonLogin" />
+<input type="button" value="Sub Window Open" onclick="showSubWindow();" id="SubWindowOpen" />
+<br>
+<input type="button" value="<- Prev" onclick="showSubWindowPrev();" id="SubWindowPrev" style="background: dimgray; color:ivory;" />
+<input type="button" value="Next ->" onclick="showSubWindowNext();" id="SubWindowNext" style="background: dimgray; color:ivory;" />
 <br><br>
 
+<!-- CDATA設定 or サブウィンドウから自動設定 -->
 <div id="description2"></div>
 <input type="text" size="40" id="miteneSource" value="" />
-<input type="button" value="Load" onclick="onClickLoadButton();" id="ButtonLoad" />
+<input type="button" value="Load" onclick="onClickLoadButton();" id="ClickLoadButton" />
+<br>
+<input type="button" value="Load (Sub Window)" onclick="onClickLoadSubWindowButton();" id="ClickLoadSubWindowButton"  style="background: dimgray; color:ivory;" />
+
+
+<!-- 表示切替 -->
 <ul>
 <li>Movie <input type="checkbox" value="Movie" onchange="onChangeMovie(this);" id="CheckboxMovie" checked />
 <li>Photo <input type="checkbox" value="Photo" onchange="onChangePhoto(this);" id="CheckboxPhoto" checked />
 </ul>
-<input type="button" value="Download All" onclick="onClickDownloadAll();" id="ButtonDownloadAll" />
 
+<!-- ダウンロード -->
+<input type="button" value="Download All" onclick="onClickDownloadAll();" id="ButtonDownloadAll" />
 <label id="messageArea" ></label>
 
 <BR>
 <BR>
+<!-- サムネイル表示 -->
 <label id="imgArea" >■</label> ←Load時に1枚目のサムネイル表示
 <ol>
+
+<!-- リンク一覧 -->
 <label id="linkToFiles" ></label>
 </ol>
 
@@ -59,10 +73,9 @@
 		return displayLanguage;
 	}
 
-	
 	function enableInputs(enable) {
 		document.getElementById('miteneSource').disabled = !enable;
-		document.getElementById('ButtonLoad').disabled = !enable;
+		document.getElementById('ClickLoadButton').disabled = !enable;
 		document.getElementById('ButtonDownloadAll').disabled = !enable;
 	}
 
@@ -90,11 +103,18 @@
 		enableInputs(true);
 	}
 
+	// ロードボタン。画面リセット、CDATAの読み込み
 	function onClickLoadButton(){
 		showMessage("");
 		evalMitene();
 	}
 
+	// サブ画面ロードボタン。サブ画面からCDATAの取得、ロードボタンの実行。
+	function onClickLoadSubWindowButton() {
+		window.api.send("get-subwindow-html");
+	}
+
+	// 全ダウンロード実行
 	function onClickDownloadAll(){
 		let photoFiles = [];
 
@@ -105,10 +125,45 @@
 		window.api.send("downloadAll", photoFiles );
 	}
 
-	function onClickLogin() {
+	// 指定するURLをサブウィンドウで開く
+	function showSubWindow(){
 		let url = document.getElementById('sharedURL').value;
-		//window.location.href = url;
-		window.open(url);
+		window.api.send("show-subwindow", url);
+	}
+
+	// URLの前ページを開く
+	function showSubWindowPrev() {
+		let url = document.getElementById('sharedURL').value;
+		let url2 = incrementPageNumberInURL(url, -1);
+		document.getElementById('sharedURL').value = url2;
+		showSubWindow();
+	}
+
+	// URLの後ページを開く
+	function showSubWindowNext() {
+		let url = document.getElementById('sharedURL').value;
+		let url2 = incrementPageNumberInURL(url, 1);
+		document.getElementById('sharedURL').value = url2;
+		showSubWindow();
+	}
+
+	// URL文字列からクエリパラメーターを取得する関数
+	function incrementPageNumberInURL(urlString, additionValue) {
+		const url = new URL(urlString);
+		const params = new URLSearchParams(url.search);
+		let  pageNumber = params.get('page');
+		
+		if (!pageNumber || pageNumber.trim() === '') {
+			pageNumber = 1;
+		} else {
+			pageNumber = parseInt(pageNumber, 10);
+		}
+		
+		const newPageNumber = pageNumber + additionValue;
+		params.set('page', newPageNumber);
+
+		url.search = params.toString();
+		return url.toString();
 	}
 
 	// textをクリップボードにコピーする
@@ -357,27 +412,53 @@
 
 	// ---------------------------------------------------
 	// Main process からの通知を受け取る関数
+	
+	// ダウンロード開始
 	window.api.on('startDownloading', (event, argv)=>{
 		startDownloading();
 		showMessage(argv);
 	});
 
+	// ダウンロード進行中
 	window.api.on('downloadProgress', (event, argv)=>{
 		showMessage(argv);
 	});
 
+	// ダウンロード終了
 	window.api.on('finishDownloading', (event, argv)=>{
 		showMessage(argv);
 		finishDownloading();
 	});
 
+	// ダウンロード終了
+	window.api.on('setConfigUrl', (event, argv)=>{
+		document.getElementById('sharedURL').value = argv;
+	});
+
+	// サブ画面からHTML取得、ロードボタン押下
+	window.api.on('subwindow-html', (event, argv)=>{
+		//HTMLからCDATA抽出
+		let start = argv.indexOf("window.gon");
+		let end = argv.indexOf("//]]>");
+		let cdata = argv.substring(start, end-1)
+		
+		// CDATAセット
+		document.getElementById('miteneSource').value = cdata;
+		
+		// CDATAロード（ロードボタン押下）
+		onClickLoadButton();
+	});
+
 	window.onload = function() {
 		enableButtonWithValidLink(false);
 		{
-			document.getElementById("description1").innerHTML = "みてねブラウザ版のURLを以下にペーストしてログインしてください。<br>※初回のみ、またはセッションが有効でないとき";
+			document.getElementById("description1").innerHTML = 
+				"みてねブラウザ版のURLを以下にペーストして開いてください。<br>※初回はログイン必須";
 			document.getElementById("description2").innerHTML = "みてねブラウザ版のソース3行目（window.gonで始まる行）を以下にペーストして<br>Load ボタンを押してください。";
+
+			window.api.send("get-config-url");
 		}
-	}
+	};
 
 
 
